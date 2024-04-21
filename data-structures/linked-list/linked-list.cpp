@@ -23,11 +23,61 @@ public:
 public:
     LinkedList() {}
 
-    // void insert(int index, int value) {}
+    void insert(int index, int value)
+    {
+        if (index == 0)
+        {
+            this->prepend(value);
+            return;
+        }
+        else if (index == this->size)
+        {
+            this->append(value);
+            return;
+        }
 
-    // LinkedListNode remove(int value) {}
+        LinkedListNode *new_node = new LinkedListNode(value);
 
-    // LinkedListNode search(int value) {}
+        LinkedListNode *prev{nullptr};
+        LinkedListNode *current = this->head;
+        int i{0};
+
+        while (i < index)
+        {
+            prev = current;
+            current = current->next;
+            i++;
+        }
+
+        prev->next = new_node;
+        new_node->next = current;
+        this->size++;
+    }
+
+    void remove(int value)
+    {
+        LinkedListNode *prev{nullptr};
+        LinkedListNode *curr{this->head};
+
+        while (curr->next != nullptr)
+        {
+            if (curr->value == value)
+            {
+                prev->next = curr->next;
+                this->size--;
+
+                // cleanup node from memory
+                delete curr;
+                curr = nullptr;
+                return;
+            }
+
+            prev = curr;
+            curr = curr->next;
+        }
+
+        throw std::runtime_error("Value not found");
+    }
 
     void append(int value)
     {
@@ -44,11 +94,49 @@ public:
         this->tail = new_node;
         this->size++;
     }
-    // LinkedListNode at(int index) {}
+    int at(int index)
+    {
+        if (index == -1)
+        {
+            return this->tail->value;
+        }
+        if (index >= this->size)
+        {
+            throw std::runtime_error("Accessing out of bounds");
+        }
 
-    // LinkedListNode shift() {}
+        int i{0};
+        LinkedListNode *current = this->head;
 
-    LinkedListNode pop()
+        while (i < index)
+        {
+            current = current->next;
+            i++;
+        }
+
+        return current->value;
+    }
+
+    int shift()
+    {
+        if (this->head == nullptr)
+        {
+            throw std::runtime_error("Cannot shift from an empty list");
+        }
+
+        LinkedListNode *deleted = this->head;
+
+        int value = this->head->value;
+        this->head = this->head->next;
+        this->size--;
+        // cleanup memory
+        delete deleted;
+        deleted = nullptr;
+
+        return value;
+    }
+
+    int pop()
     {
         if (this->tail == nullptr)
         {
@@ -67,10 +155,24 @@ public:
         prev->next = nullptr;
         this->tail = prev;
         this->size--;
-        return *current;
+
+        int deleted_value = current->value;
+
+        // cleanup memory
+        prev = nullptr;
+        delete current;
+        current = nullptr;
+
+        return deleted_value;
     }
 
-    // void prepend(int value) {}
+    void prepend(int value)
+    {
+        LinkedListNode *new_node = new LinkedListNode(value);
+        new_node->next = this->head;
+        this->head = new_node;
+        this->size++;
+    }
 };
 
 int main()
@@ -121,14 +223,29 @@ int main()
         }
     }
 
+    // Test preprend
+    {
+        LinkedList linked_list;
+        linked_list.append(1);
+        linked_list.prepend(2);
+        if (linked_list.head->value != 2 || linked_list.head->next->value != 1 || linked_list.tail->value != 1 || linked_list.size != 2)
+        {
+            std::cout << "Test preprend failed\n";
+        }
+        else
+        {
+            std::cout << "Test preprend passed\n";
+        }
+    }
+
     // Test delete last
     {
         LinkedList linked_list;
         linked_list.append(1);
         linked_list.append(2);
         linked_list.append(3);
-        LinkedListNode popped_node = linked_list.pop();
-        if (popped_node.value != 3 || linked_list.head->next->next != nullptr || linked_list.tail->value != 2 || linked_list.size != 2)
+        int value = linked_list.pop();
+        if (value != 3 || linked_list.head->next->next != nullptr || linked_list.tail->value != 2 || linked_list.size != 2)
         {
             std::cout << "Test delete last failed\n";
         }
@@ -139,43 +256,71 @@ int main()
     }
 
     // Test delete first
-    // {
-    //     LinkedList linked_list;
-    //     linked_list.append(1);
-    //     linked_list.append(2);
-    //     linked_list.append(3);
-    //     LinkedListNode removed_node = linked_list.shift();
-    //     if (removed_node.value != 1 || linked_list.head->value != 2 || linked_list.head->next->value != 3 || linked_list.tail->value != 3 || linked_list.size != 2)
-    //     {
-    //         std::cout << "Test delete first failed\n";
-    //     }
-    // }
+    {
+        LinkedList linked_list;
+        linked_list.append(1);
+        linked_list.append(2);
+        linked_list.append(3);
+        int value = linked_list.shift();
+        if (value != 1 || linked_list.head->value != 2 || linked_list.head->next->value != 3 || linked_list.tail->value != 3 || linked_list.size != 2)
+        {
+            std::cout << "Test delete first failed\n";
+        }
+        else
+        {
+            std::cout << "Test delete first passed\n";
+        }
+    }
 
     // Test access at index
-    // {
-    //     LinkedList linked_list;
-    //     linked_list.append(1);
-    //     linked_list.append(2);
-    //     linked_list.append(3);
-    //     if (linked_list.at(0).value != 1 || linked_list.at(1).value != 2 || linked_list.at(2).value != 3 || linked_list.at(3) != nullptr || linked_list.size != 3)
-    //     {
-    //         std::cout << "Test access at index failed\n";
-    //     }
-    // }
+    {
+        LinkedList linked_list;
+        linked_list.append(1);
+        linked_list.append(2);
+        linked_list.append(3);
+        if (linked_list.at(0) != 1 || linked_list.at(1) != 2 || linked_list.at(2) != 3 || linked_list.size != 3 || linked_list.at(-1) != 3)
+        {
+            std::cout << "Test access at index failed\n";
+        }
+        else
+        {
+            std::cout << "Test access at index passed\n";
+        }
+    }
 
     // Test insert at index
-    // {
-    //     LinkedList linked_list;
-    //     linked_list.append(1);
-    //     linked_list.append(2);
-    //     linked_list.append(3);
-    //     linked_list.insert(1, 4);
-    //     if (linked_list.head->value != 1 || linked_list.head->next->value != 4 || linked_list.head->next->next->value != 3 ||
-    //         linked_list.at(0).value != 1 || linked_list.at(1).value != 4 || linked_list.at(2).value != 3 || linked_list.at(3) != nullptr || linked_list.size != 4)
-    //     {
-    //         std::cout << "Test insert at index failed\n";
-    //     }
-    // }
+    {
+        LinkedList linked_list;
+        linked_list.append(1);
+        linked_list.append(2);
+        linked_list.append(3);
+        linked_list.insert(1, 4);
+        if (linked_list.at(1) != 4 || linked_list.at(2) != 2 || linked_list.size != 4)
+        {
+            std::cout << "Test insert at index failed\n";
+        }
+        else
+        {
+            std::cout << "Test insert at index passed\n";
+        }
+    }
+
+    // Test delete by value
+    {
+        LinkedList linked_list;
+        linked_list.append(1);
+        linked_list.append(2);
+        linked_list.append(3);
+        linked_list.remove(2);
+        if (linked_list.at(1) != 3 || linked_list.size != 2)
+        {
+            std::cout << "Test delete by value failed\n";
+        }
+        else
+        {
+            std::cout << "Test delete by value passed\n";
+        }
+    }
 
     return 0;
 }
