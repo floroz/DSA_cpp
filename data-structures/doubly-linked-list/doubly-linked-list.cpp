@@ -1,36 +1,55 @@
 #include <iostream>
-
-class DoublyLinkedListNode
-{
-public:
-    DoublyLinkedListNode *prev{nullptr};
-    DoublyLinkedListNode *next{nullptr};
-    int value;
-
-public:
-    DoublyLinkedListNode(int value)
-    {
-        this->value = value;
-    };
-};
+#include <stdexcept>
 
 class DoublyLinkedList
 {
+private:
+    class DoublyLinkedListNode
+    {
+    public:
+        DoublyLinkedListNode *prev{nullptr};
+        DoublyLinkedListNode *next{nullptr};
+        int value;
+
+    public:
+        DoublyLinkedListNode(int value)
+        {
+            this->value = value;
+        };
+    };
+
 public:
     DoublyLinkedListNode *head{nullptr};
     DoublyLinkedListNode *tail{nullptr};
     uint32_t size{0};
 
-public:
-    DoublyLinkedList() {}
+    DoublyLinkedList() = default;
+    ~DoublyLinkedList()
+    {
+        while (this->head != nullptr)
+        {
+            DoublyLinkedListNode *next = this->head->next;
+            delete this->head;
+            this->head = next;
+        }
+    }
+
+    DoublyLinkedList(const DoublyLinkedList &other) = delete;            // disallow copying
+    DoublyLinkedList &operator=(const DoublyLinkedList &other) = delete; // disallow assignment
 
     void insert(int index, int value)
     {
-        if (index == 0)
+        if (index < 0 || index > this->size)
+        {
+            throw std::out_of_range("Index out of range");
+        }
+        // O(1)
+        else if (index == 0)
         {
             this->prepend(value);
             return;
         }
+        // O(1)
         else if (index == this->size)
         {
             this->append(value);

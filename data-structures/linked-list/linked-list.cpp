@@ -1,35 +1,54 @@
 #include <iostream>
-
-class LinkedListNode
-{
-public:
-    LinkedListNode *next{nullptr};
-    int value;
-
-public:
-    LinkedListNode(int value)
-    {
-        this->value = value;
-    };
-};
+#include <stdexcept>
 
 class LinkedList
 {
+private:
+    class LinkedListNode
+    {
+    public:
+        LinkedListNode *next{nullptr};
+        int value;
+
+    public:
+        LinkedListNode(int value)
+        {
+            this->value = value;
+        };
+    };
+
 public:
     LinkedListNode *head{nullptr};
     LinkedListNode *tail{nullptr};
     uint32_t size{0};
 
-public:
-    LinkedList() {}
+    LinkedList() = default;
+    ~LinkedList()
+    {
+        while (this->head != nullptr)
+        {
+            LinkedListNode *next = this->head->next;
+            delete this->head;
+            this->head = next;
+        }
+    }
+
+    LinkedList(const LinkedList &other) = delete;            // disallow copying
+    LinkedList &operator=(const LinkedList &other) = delete; // disallow assignment
 
     void insert(int index, int value)
     {
-        if (index == 0)
+        if (index < 0 || index > this->size)
+        {
+            throw std::out_of_range("Index out of range");
+        }
+        // O(1)
+        else if (index == 0)
         {
             this->prepend(value);
             return;
         }
+        // O(1)
         else if (index == this->size)
         {
             this->append(value);
